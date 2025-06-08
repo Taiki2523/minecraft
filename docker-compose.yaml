@@ -10,6 +10,7 @@ services:
       - JVM_OPTS
       - EULA
       - MOTD
+      - SEED
       - DIFFICULTY
       - MAX_PLAYERS
       - MAX_WORLD_SIZE
