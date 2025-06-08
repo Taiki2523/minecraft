@@ -5,6 +5,7 @@ services:
     tty: true
     stdin_open: true
     environment:
+      - SERVER_NAME
       - ENABLE_ROLLING_LOGS
       - JVM_OPTS
       - EULA
@@ -24,7 +25,7 @@ services:
       - SIMULATION_DISTANCE
       - STOP_SERVER_ANNOUNCE_DELAY
       - GUI
-      
+      - SPAWN_PROTECTION
       - ENABLE_RCON
       - RCON_PORT
       - RCON_PASSWORD
