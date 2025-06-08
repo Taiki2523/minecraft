@@ -68,6 +68,7 @@ services:
     environment:
       - MINECRAFT_LOG_PATH
       - DISCORD_WEBHOOK_URL
+      - LOG_LEVEL
     volumes:
       - ${MINECRAFT_DATA_PATH}:/data:ro
     networks:

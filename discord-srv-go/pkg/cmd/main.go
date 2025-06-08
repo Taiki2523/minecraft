@@ -4,6 +4,7 @@ package main
 import (
 	"bufio"
 	"errors"
+	"flag"
 	"fmt"
 	"io"
 	"log"
@@ -27,7 +28,7 @@ type DiscordNotifier struct {
 }
 
 func (d *DiscordNotifier) Send(message string) error {
-	log.Println("📤 Sending message to Discord:", message)
+	logDebug("Sending message to Discord: %s", message)
 	payload := strings.NewReader(`{"content":"` + message + `"}`)
 	resp, err := http.Post(d.WebhookURL, "application/json", payload)
 	if err != nil {
@@ -40,13 +41,28 @@ func (d *DiscordNotifier) Send(message string) error {
 	return nil
 }
 
+var logLevel = "info"
+
+func logDebug(format string, v ...interface{}) {
+	if logLevel == "debug" {
+		log.Printf("🐛 "+format, v...)
+	}
+}
+
+func logInfo(format string, v ...interface{}) {
+	log.Printf("ℹ️ "+format, v...)
+}
+
+func logError(format string, v ...interface{}) {
+	log.Printf("❌ "+format, v...)
+}
+
 func extractPlayerName(line string) string {
 	parts := strings.Split(line, "]: ")
 	if len(parts) < 2 {
 		return ""
 	}
-	msg := parts[1]
-	fields := strings.Fields(msg)
+	fields := strings.Fields(parts[1])
 	if len(fields) > 0 {
 		return fields[0]
 	}
@@ -54,50 +70,26 @@ func extractPlayerName(line string) string {
 }
 
 func processLogLine(line string, notifier Notifier) {
-	log.Printf("📄 解析中ログ行: %s", line)
+	logDebug("Checking line: %s", line)
 
 	if strings.Contains(line, "joined the game") {
 		if name := extractPlayerName(line); name != "" {
 			err := notifier.Send(fmt.Sprintf("🟢 %s がサーバに参加しました", name))
 			if err != nil {
-				log.Printf("❌ 通知失敗: %v", err)
+				logError("通知失敗: %v", err)
 			}
 		}
 	} else if strings.Contains(line, "left the game") {
 		if name := extractPlayerName(line); name != "" {
 			err := notifier.Send(fmt.Sprintf("🔴 %s がサーバから退出しました", name))
 			if err != nil {
-				log.Printf("❌ 通知失敗: %v", err)
+				logError("通知失敗: %v", err)
 			}
 		}
 	}
 }
 
-func RunWithNotifier(logPath string, notifier Notifier, maxAttempts int) error {
-	log.Println("🏁 RunWithNotifier started. Monitoring:", logPath)
-
-	// retry open file
-	var file *os.File
-	var err error
-	for i := 1; i <= maxAttempts; i++ {
-		file, err = os.Open(logPath)
-		if err == nil {
-			break
-		}
-		log.Printf("⚠️ Log file not found. Retrying in 5 seconds... (%d/%d)", i, maxAttempts)
-		time.Sleep(5 * time.Second)
-	}
-	if err != nil {
-		return errors.New("failed to open log file after max retries")
-	}
-	defer file.Close()
-
-	_, err = file.Seek(0, io.SeekEnd)
-	if err != nil {
-		return fmt.Errorf("failed to seek to end: %w", err)
-	}
-	reader := bufio.NewReader(file)
-
+func watchFile(logPath string, notifier Notifier) error {
 	watcher, err := fsnotify.NewWatcher()
 	if err != nil {
 		return err
@@ -105,42 +97,76 @@ func RunWithNotifier(logPath string, notifier Notifier, maxAttempts int) error {
 	defer watcher.Close()
 
 	dir := filepath.Dir(logPath)
-	if err := watcher.Add(dir); err != nil {
+	logInfo("Watching directory: %s", dir)
+
+	err = watcher.Add(logPath)
+	if err != nil {
 		return err
 	}
 
+	file, err := os.Open(logPath)
+	if err != nil {
+		return err
+	}
+	defer file.Close()
+	file.Seek(0, io.SeekEnd)
+	reader := bufio.NewReader(file)
+
 	for {
 		select {
-		case event := <-watcher.Events:
+		case event, ok := <-watcher.Events:
+			if !ok {
+				return errors.New("fsnotify event channel closed")
+			}
 			if event.Op&fsnotify.Write == fsnotify.Write && event.Name == logPath {
-				log.Println("🔁 Log file modified:", event.Name)
+				logInfo("🔁 Log file modified: %s", event.Name)
 				for {
 					line, err := reader.ReadString('\n')
 					if err != nil {
 						if errors.Is(err, io.EOF) {
 							break
 						}
-						return fmt.Errorf("read error: %w", err)
+						return err
 					}
 					processLogLine(line, notifier)
 				}
 			}
-		case err := <-watcher.Errors:
-			log.Println("❌ Watcher error:", err)
+		case err, ok := <-watcher.Errors:
+			if !ok {
+				return errors.New("fsnotify error channel closed")
+			}
+			logError("Watcher error: %v", err)
 		}
 	}
 }
 
-func main() {
-	logPath := os.Getenv("MINECRAFT_LOG_PATH")
-	webhook := os.Getenv("DISCORD_WEBHOOK_URL")
+func RunWithNotifier(logPath string, notifier Notifier, maxAttempts int) error {
+	logInfo("RunWithNotifier started. Monitoring: %s", logPath)
 
-	if logPath == "" || webhook == "" {
-		log.Fatal("❗ 環境変数が不足しています: MINECRAFT_LOG_PATH, DISCORD_WEBHOOK_URL")
+	for i := 1; i <= maxAttempts; i++ {
+		if _, err := os.Stat(logPath); err == nil {
+			return watchFile(logPath, notifier)
+		}
+		logInfo("Log file not found. Retrying in 5 seconds... (%d/%d)", i, maxAttempts)
+		time.Sleep(5 * time.Second)
 	}
+	return fmt.Errorf("failed to find log file after %d retries", maxAttempts)
+}
 
-	notifier := &DiscordNotifier{WebhookURL: webhook}
-	if err := RunWithNotifier(logPath, notifier, 10); err != nil {
-		log.Fatalf("❌ Run failed: %v", err)
+func main() {
+	logPath := flag.String("log", "/data/logs/latest.log", "Path to the Minecraft log file")
+	webhook := flag.String("webhook", os.Getenv("DISCORD_WEBHOOK_URL"), "Discord Webhook URL")
+	retries := flag.Int("retries", 12, "Max retries if log file not found")
+	level := flag.String("loglevel", "info", "Log level: debug, info")
+	flag.Parse()
+
+	if *webhook == "" {
+		log.Fatal("DISCORD_WEBHOOK_URL is not set or --webhook flag not provided")
+	}
+	logLevel = *level
+
+	n := &DiscordNotifier{WebhookURL: *webhook}
+	if err := RunWithNotifier(*logPath, n, *retries); err != nil {
+		log.Fatal(err)
 	}
 }

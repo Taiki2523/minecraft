@@ -10,6 +10,7 @@ services:
     environment:
       - MINECRAFT_LOG_PATH
       - DISCORD_WEBHOOK_URL
+      - LOG_LEVEL=debug  
     volumes:
       - ./:${GOLANG_ROOT_PATH}
       - ${MINECRAFT_DATA_PATH}:/data:ro

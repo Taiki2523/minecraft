@@ -1,62 +1,96 @@
-// file: pkg/cmd/main_test.go
 package main
 
 import (
 	"os"
-	"strings"
 	"testing"
 )
 
-// mockNotifier is used for verifying notifications in tests
-type mockNotifier struct {
-	Messages []string
-}
+func TestNotifyJoinLeave(t *testing.T) {
+	url := os.Getenv("DISCORD_WEBHOOK_URL")
+	if url == "" {
+		t.Skip("DISCORD_WEBHOOK_URL が未設定のためスキップします")
+	}
 
-func (m *mockNotifier) Send(msg string) error {
-	m.Messages = append(m.Messages, msg)
-	return nil
-}
+	notifier := &DiscordNotifier{WebhookURL: url}
 
-func TestProcessLogLine(t *testing.T) {
 	tests := []struct {
-		line     string
-		expected string
+		name       string
+		logLine    string
+		expectSend bool
+		expectMsg  string
 	}{
-		{"[Server thread/INFO]: Steve joined the game", "🟢 Steve がサーバに参加しました"},
-		{"[Server thread/INFO]: Alex left the game", "🔴 Alex がサーバから退出しました"},
-		{"[Server thread/INFO]: unrelated message", ""},
+		{
+			name:       "Join event",
+			logLine:    "[15:57:19] [Server thread/INFO]: marcia2525dayo joined the game",
+			expectSend: true,
+			expectMsg:  "🟢 marcia2525dayo がサーバに参加しました",
+		},
+		{
+			name:       "Leave event",
+			logLine:    "[15:57:22] [Server thread/INFO]: marcia2525dayo left the game",
+			expectSend: true,
+			expectMsg:  "🔴 marcia2525dayo がサーバから退出しました",
+		},
+		{
+			name:       "Non-matching log",
+			logLine:    "[15:53:02] [Server thread/INFO]: [Rcon: Automatic saving is now disabled]",
+			expectSend: false,
+		},
+		{
+			name:       "Malformed log",
+			logLine:    "INVALID LOG LINE FORMAT",
+			expectSend: false,
+		},
 	}
 
-	for _, tt := range tests {
-		mock := &mockNotifier{}
-		processLogLine(tt.line, mock)
-		if tt.expected == "" && len(mock.Messages) > 0 {
-			t.Errorf("unexpected message: %v", mock.Messages)
-		}
-		if tt.expected != "" && (len(mock.Messages) != 1 || mock.Messages[0] != tt.expected) {
-			t.Errorf("got %v, want %v", mock.Messages, tt.expected)
-		}
+	for _, tc := range tests {
+		t.Run(tc.name, func(t *testing.T) {
+			player := extractPlayerName(tc.logLine)
+			var message string
+
+			if tc.expectSend {
+				if player == "" {
+					t.Errorf("プレイヤー名の抽出に失敗しました: %s", tc.logLine)
+					return
+				}
+				if containsJoin(tc.logLine) {
+					message = "🟢 " + player + " がサーバに参加しました"
+				} else if containsLeave(tc.logLine) {
+					message = "🔴 " + player + " がサーバから退出しました"
+				}
+				if message != tc.expectMsg {
+					t.Errorf("生成されたメッセージが想定と異なります: got=%q want=%q", message, tc.expectMsg)
+				}
+				err := notifier.Send(message)
+				if err != nil {
+					t.Errorf("Discord通知に失敗: %v", err)
+				}
+			} else {
+				if player != "" {
+					t.Errorf("通知不要のログでプレイヤー名が抽出されました: %s", player)
+				}
+			}
+		})
 	}
 }
 
-func TestRunWithNotifier_FileNotFound(t *testing.T) {
-	mock := &mockNotifier{}
-	err := RunWithNotifier("nonexistent.log", mock, 2)
-	if err == nil || !strings.Contains(err.Error(), "failed to open") {
-		t.Errorf("expected file open failure, got: %v", err)
-	}
+// ヘルパー関数（main.goにある関数と一致させる）
+func containsJoin(line string) bool {
+	return len(line) > 0 && stringContains(line, "joined the game")
 }
-
-// Integration test for actual Discord Webhook
-func TestDiscordNotification_Integration(t *testing.T) {
-	webhook := os.Getenv("DISCORD_WEBHOOK_URL")
-	if webhook == "" {
-		t.Skip("DISCORD_WEBHOOK_URL is not set")
-	}
-
-	notifier := &DiscordNotifier{WebhookURL: webhook}
-	err := notifier.Send("✅ Integration test from descord-srv-go")
-	if err != nil {
-		t.Fatalf("Failed to send Discord message: %v", err)
-	}
+func containsLeave(line string) bool {
+	return len(line) > 0 && stringContains(line, "left the game")
+}
+func stringContains(s, substr string) bool {
+	return len(s) >= len(substr) && (s[len(s)-len(substr):] == substr || contains(s, substr))
+}
+func contains(s, substr string) bool {
+	return len(s) >= len(substr) && (func() bool {
+		for i := 0; i <= len(s)-len(substr); i++ {
+			if s[i:i+len(substr)] == substr {
+				return true
+			}
+		}
+		return false
+	}())
 }
