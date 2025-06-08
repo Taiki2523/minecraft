@@ -1,0 +1,63 @@
+services:
+  vanilla:
+    container_name: mc_vanilla
+    image: itzg/minecraft-server
+    tty: true
+    stdin_open: true
+    environment:
+      - ENABLE_ROLLING_LOGS
+      - JVM_OPTS
+      - EULA
+      - MOTD
+      - DIFFICULTY
+      - MAX_PLAYERS
+      - MAX_WORLD_SIZE
+      - ENABLE_COMMAND_BLOCK
+      - SNOOPER_ENABLED
+      - VIEW_DISTANCE
+      - PVP
+      - LEVEL
+      - VERSION
+      - MODE
+      - ALLOW_FLIGHT
+      - USE_NATIVE_TRANSPORT
+      - SIMULATION_DISTANCE
+      - STOP_SERVER_ANNOUNCE_DELAY
+      - GUI
+    ports:
+      - "25565:25565/tcp"
+      - "25565:25565/udp"
+    volumes:
+      - ${MINECRAFT_DATA_PATH}:/data
+      - /etc/timezone:/etc/timezone:ro
+    restart: always
+    deploy:
+      resources:
+        limits:
+          memory: '4g'
+    networks:
+      - main-application-network2
+  
+  backup:
+    image: itzg/mc-backup
+    depends_on:
+      - vanilla
+    environment:
+      BACKUP_INTERVAL: "2h"
+      RCON_HOST: vanilla
+      PRUNE_BACKUPS_DAYS: 3
+    volumes:
+      - ${MINECRAFT_DATA_PATH}:/data:ro
+      - ${MINECRAFT_BACKUP_DATA_PATH}:/backups
+      - /etc/timezone:/etc/timezone:ro
+    deploy:
+      resources:
+        limits:
+          memory: '1g'
+    networks:
+      - main-application-network2
+
+networks:
+  main-application-network2:
+    external: true
+    
