@@ -1,0 +1,21 @@
+services:
+  golang:
+    build:
+      context: .
+      dockerfile: ./build/Dockerfile.dev
+    tty: true
+    stdin_open: true
+    container_name: ${GOLANG_CONTAINER_NAME}
+    restart: always
+    environment:
+      - MINECRAFT_LOG_PATH
+      - DISCORD_WEBHOOK_URL
+    volumes:
+      - ./:${GOLANG_ROOT_PATH}
+      - ${MINECRAFT_DATA_PATH}:/data:ro
+    networks:
+      - main-application-network2
+
+networks:
+  main-application-network2:
+    external: true

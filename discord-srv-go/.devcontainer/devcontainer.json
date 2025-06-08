@@ -1,0 +1,22 @@
+{
+  "name": "Go-devcontainer",
+  "service": "golang",
+  "dockerComposeFile": [
+    "../docker-compose.yml"
+  ],
+  "workspaceFolder": "/go/src/github.com/taiki2523/app",
+  "customizations": {
+    "vscode": {
+      "settings": {
+        "go.gopath": "/go",
+        "go.inferGopath": true,
+        "go.useLanguageServer": true
+      },
+      "extensions": [
+        "golang.go"
+      ]
+    }
+  },
+  "forwardPorts": []
+  //"postCreateCommand": "go mod tidy"
+}

@@ -37,10 +37,6 @@ services:
       - ${MINECRAFT_DATA_PATH}:/data
       - /etc/timezone:/etc/timezone:ro
     restart: always
-    deploy:
-      resources:
-        limits:
-          memory: '4g'
     networks:
       - main-application-network2
   
@@ -58,10 +54,22 @@ services:
       - ${MINECRAFT_DATA_PATH}:/data:ro
       - ${MINECRAFT_BACKUP_DATA_PATH}:/backups
       - /etc/timezone:/etc/timezone:ro
-    deploy:
-      resources:
-        limits:
-          memory: '1g'
+    networks:
+      - main-application-network2
+
+  discord-srv-go:
+    build:
+      context: ./discord-srv-go
+      dockerfile: ./build/Dockerfile.prod
+    container_name: discord-srv-go
+    depends_on:
+      - vanilla
+    restart: always
+    environment:
+      - MINECRAFT_LOG_PATH
+      - DISCORD_WEBHOOK_URL
+    volumes:
+      - ${MINECRAFT_DATA_PATH}:/data:ro
     networks:
       - main-application-network2
 
