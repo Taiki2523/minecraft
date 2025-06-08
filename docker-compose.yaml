@@ -24,6 +24,10 @@ services:
       - SIMULATION_DISTANCE
       - STOP_SERVER_ANNOUNCE_DELAY
       - GUI
+      
+      - ENABLE_RCON
+      - RCON_PORT
+      - RCON_PASSWORD
     ports:
       - "25565:25565/tcp"
       - "25565:25565/udp"
@@ -43,9 +47,11 @@ services:
     depends_on:
       - vanilla
     environment:
-      BACKUP_INTERVAL: "2h"
-      RCON_HOST: vanilla
-      PRUNE_BACKUPS_DAYS: 3
+      - BACKUP_INTERVAL
+      - RCON_HOST
+      - PRUNE_BACKUPS_DAYS
+      - RCON_PORT
+      - RCON_PASSWORD
     volumes:
       - ${MINECRAFT_DATA_PATH}:/data:ro
       - ${MINECRAFT_BACKUP_DATA_PATH}:/backups
