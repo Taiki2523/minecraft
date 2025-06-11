@@ -25,14 +25,6 @@ jobs:
       with:
         go-version: ${{ matrix.go-version }}
     
-    - name: Cache Go modules
-      uses: actions/cache@v3
-      with:
-        path: ~/go/pkg/mod
-        key: ${{ runner.os }}-go-${{ hashFiles('discord-srv-go/go.sum') }}
-        restore-keys: |
-          ${{ runner.os }}-go-
-    
     - name: Display Go version
       run: go version
     
