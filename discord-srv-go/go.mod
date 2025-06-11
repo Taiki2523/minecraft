@@ -1,4 +1,4 @@
-module github.com/taiki2523/app
+module github.com/taiki2523/discord-srv-go
 
 go 1.23.0
 

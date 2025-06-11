@@ -12,15 +12,18 @@ COPY pkg ./pkg
 # 静的にビルド（CGOを無効化、Linux向け）
 RUN CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build -a -installsuffix cgo -o discord-srv-go ./pkg/cmd
 
-# Stage 2: 最小のランタイムイメージ
-FROM alpine:3.20
+# Stage 2: ランタイムイメージ
+FROM ubuntu:24.04
+
+RUN apt-get update && apt-get install -y ca-certificates docker.io tzdata
+
 WORKDIR /root/
 
 # 実行ファイルコピー
-COPY --from=builder /app/discord-srv-go /discord-srv-go
+COPY --from=builder /app/discord-srv-go /usr/local/bin/discord-srv-go
 
 # 実行権限を明示（念のため）
-RUN chmod +x /discord-srv-go
+RUN chmod +x /usr/local/bin/discord-srv-go
 
 # エントリポイント指定
-ENTRYPOINT ["/discord-srv-go"]
+ENTRYPOINT ["/usr/local/bin/discord-srv-go"]

@@ -1,6 +1,6 @@
 FROM golang:1.23
 
-ENV ROOT=/go/src/github.com/taiki2523/app
+ENV ROOT=/go/src/github.com/taiki2523/discord-srv-go
 WORKDIR ${ROOT}
 
 COPY scripts/install_go_tools.sh ./scripts/install_go_tools.sh
