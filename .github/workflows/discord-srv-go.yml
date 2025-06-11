@@ -23,8 +23,8 @@ jobs:
       uses: actions/setup-go@v4
       with:
         go-version: ${{ matrix.go-version }}
-        cache-dependency-path: discord-srv-go/go.sum
-        
+    - name: Get dependencies
+      run: go get -v -t -d ./discord-srv-go
     - name: Display Go version
       run: go version
 
