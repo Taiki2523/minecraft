@@ -6,6 +6,7 @@ Minecraft サーバのログを監視し、Discord Webhook にログイン・ロ
 
 ```
 .
+├── .devcontainer             # vscode DevContainer構成ファイル
 ├── build/
 │   ├── Dockerfile.dev        # 開発用 Dockerfile
 │   └── Dockerfile.prod       # 本番用 Dockerfile
@@ -21,47 +22,43 @@ Minecraft サーバのログを監視し、Discord Webhook にログイン・ロ
 
 ## 🚀 セットアップ手順
 
-### 1. 必要な Go ツールのインストール
+### 2. DevContainer の起動
 
-```bash
-bash scripts/install_go_tools.sh
-```
-
-### 2. Docker コンテナの起動
-
-```bash
-docker-compose up -d
-```
+.devcontainerがあるルートフォルダに移動
+`ctrl + shift + p`から`>Dev Containers: Rebuild and Reopen in Container`を開くと開発環境が立ち上がる
 
 ### 3. 環境変数の設定
 
 `.env` または `docker-compose.yml` に以下のように指定してください：
 
 ```env
+GOLANG_CONTAINER_NAME=discord-srv-go-container
+GOLANG_ROOT_PATH=/go/src/github.com/taiki2523/app
+MINECRAFT_DATA_PATH=/path/to/minecraft-data
+LOG_FILE=/data/logs/latest.log
+LOG_LEVEL=debug
 MINECRAFT_LOG_PATH=/data/logs/latest.log
 DISCORD_WEBHOOK_URL=https://discord.com/api/webhooks/xxxxx/yyyyy
+HEALTH_INTERVAL=1h
 ```
+`GOLANG_ROOT_PATH`は、DevContainerのworkspaseFoldrerです。devcontainer.jsonに記載。
 
-`/data/logs/latest.log` は、Minecraft サーバがログを出力するパスです。
+`MINECRAFT_DATA_PATH`は`/data`のマウントパスです。
+
+`LOG_FILE` は、Minecraft サーバがログを出力するパスです。
 
 ## 🔎 開発・テスト
 
-### 開発用ビルドと起動
+### 開発用起動
 
-```bash
-docker build -f build/Dockerfile.dev -t descord-srv-go-dev .
-docker run --rm -it \
-  -v "$(pwd)":/app \
-  -v ${MINECRAFT_DATA_PATH}:/data:ro \
-  -e MINECRAFT_LOG_PATH=/data/logs/latest.log \
-  -e DISCORD_WEBHOOK_URL=https://discord.com/api/webhooks/xxxxx/yyyyy \
-  descord-srv-go-dev
+```devcontainer bash
+go run ./pkg/cmd/...
 ```
 
 ### ユニットテストの実行
 
-```bash
-go test ./pkg/cmd/...
+```devcontainer bash
+go test -v ./pkg/cmd/...
 ```
 
 ※ `DISCORD_WEBHOOK_URL` を指定すると、統合テストで実際に通知が送信されます。
