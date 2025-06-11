@@ -1,4 +1,4 @@
-FROM golang:1.23.10
+FROM golang:1.23
 
 ENV ROOT=/go/src/github.com/taiki2523/app
 WORKDIR ${ROOT}
