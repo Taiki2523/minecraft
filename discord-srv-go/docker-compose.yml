@@ -8,12 +8,13 @@ services:
     container_name: ${GOLANG_CONTAINER_NAME}
     restart: always
     environment:
-      - MINECRAFT_LOG_PATH
-      - DISCORD_WEBHOOK_URL
-      - LOG_LEVEL=debug  
+      DISCORD_WEBHOOK_URL: ${DISCORD_WEBHOOK_URL}
+      LOG_FILE: ${LOG_FILE}
+      LOG_LEVEL: ${LOG_LEVEL}
+      HEALTH_INTERVAL: ${HEALTH_INTERVAL}
     volumes:
       - ./:${GOLANG_ROOT_PATH}
-      - ${MINECRAFT_DATA_PATH}:/data:ro
+      - ${MINECRAFT_DATA_PATH}:/data
     networks:
       - main-application-network2
 

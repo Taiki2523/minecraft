@@ -39,41 +39,6 @@ services:
     restart: always
     networks:
       - main-application-network2
-  
-  backup:
-    image: itzg/mc-backup
-    depends_on:
-      - vanilla
-    environment:
-      - BACKUP_INTERVAL
-      - RCON_HOST
-      - PRUNE_BACKUPS_DAYS
-      - RCON_PORT
-      - RCON_PASSWORD
-    volumes:
-      - ${MINECRAFT_DATA_PATH}:/data:ro
-      - ${MINECRAFT_BACKUP_DATA_PATH}:/backups
-      - /etc/timezone:/etc/timezone:ro
-    networks:
-      - main-application-network2
-
-  discord-srv-go:
-    build:
-      context: ./discord-srv-go
-      dockerfile: ./build/Dockerfile.prod
-    container_name: discord-srv-go
-    depends_on:
-      - vanilla
-    restart: always
-    environment:
-      DISCORD_WEBHOOK_URL: ${DISCORD_WEBHOOK_URL}
-      LOG_FILE: ${LOG_FILE}
-      LOG_LEVEL: ${LOG_LEVEL}
-      HEALTH_INTERVAL: ${HEALTH_INTERVAL}
-    volumes:
-      - ${MINECRAFT_DATA_PATH}:/data
-    networks:
-      - main-application-network2
 
 networks:
   main-application-network2:
