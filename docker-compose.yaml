@@ -1,25 +1,4 @@
 services:
-
-  discord-srv-go:
-    build:
-      context: ./discord-srv-go
-      dockerfile: ./build/Dockerfile.prod
-    container_name: discord-srv-go
-    restart: always
-    environment:
-      TIMEZONE: ${TIMEZONE}
-      DISCORD_WEBHOOK_URL: ${DISCORD_WEBHOOK_URL}
-      LOG_FILE: ${LOG_FILE}
-      LOG_LEVEL: ${LOG_LEVEL}
-      PLAYER_CHECK_INTERVAL: ${PLAYER_CHECK_INTERVAL}
-      MC_CONTAINER_NAME: ${MC_CONTAINER_NAME}
-      MC_MONITOR_INTERVAL: ${MC_MONITOR_INTERVAL}
-    volumes:
-      - ${MINECRAFT_DATA_PATH}:/data
-      - /var/run/docker.sock:/var/run/docker.sock:ro
-    networks:
-      - main-application-network2
-
   vanilla:
     container_name: mc_vanilla
     image: itzg/minecraft-server
@@ -64,8 +43,6 @@ services:
       start_period: 1m
       interval: 5s
       retries: 10
-    depends_on:
-      - discord-srv-go
     networks:
       - main-application-network2
   
