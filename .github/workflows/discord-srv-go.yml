@@ -44,23 +44,17 @@ jobs:
     - name: Run vet
       run: go vet ./...
     
-    # - name: Run tests
-    #   run: go test -v ./...
+    #- name: Run tests
+    #  run: go test -v ./...
     
     - name: Check formatting
       run: |
         go fmt ./...
-        git diff --exit-code
+        if [ -n "$(git status --porcelain)" ]; then
+          echo "❌ Code needs formatting. Please run 'go fmt ./...' locally."
+          git diff
+          exit 1
+        fi
     
     - name: Build application
       run: go build -v ./pkg/cmd
-    
-    - name: Run build verification
-      run: |
-        if [ -f "./pkg/cmd" ]; then
-          echo "✅ Build successful - executable created"
-          ls -la ./pkg/cmd
-        else
-          echo "❌ Build failed - no executable found"
-          exit 1
-        fi
