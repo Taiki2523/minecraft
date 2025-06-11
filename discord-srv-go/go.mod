@@ -1,6 +1,8 @@
 module github.com/taiki2523/app
 
-go 1.23.10
+go 1.23.0
+
+toolchain go1.23.10
 
 require (
 	github.com/fsnotify/fsnotify v1.9.0
