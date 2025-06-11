@@ -6,7 +6,8 @@ Minecraft サーバのログを監視し、Discord Webhook にログイン・ロ
 
 ```
 .
-├── .devcontainer             # vscode DevContainer構成ファイル
+├── .devcontainer             
+│   ├── devcontainer.json     # vscode DevContainer構成ファイル
 ├── build/
 │   ├── Dockerfile.dev        # 開発用 Dockerfile
 │   └── Dockerfile.prod       # 本番用 Dockerfile
