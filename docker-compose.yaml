@@ -27,6 +27,7 @@ services:
     stdin_open: true
     environment:
       SERVER_NAME: ${SERVER_NAME}
+      # TYPE: ${TYPE}
       ENABLE_ROLLING_LOGS: ${ENABLE_ROLLING_LOGS}
       JVM_OPTS: ${JVM_OPTS}
       EULA: ${EULA}
