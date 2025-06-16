@@ -5,73 +5,60 @@ services:
     tty: true
     stdin_open: true
     environment:
-      - SERVER_NAME
-      - ENABLE_ROLLING_LOGS
-      - JVM_OPTS
-      - EULA
-      - MOTD
-      - SEED
-      - DIFFICULTY
-      - MAX_PLAYERS
-      - MAX_WORLD_SIZE
-      - ENABLE_COMMAND_BLOCK
-      - SNOOPER_ENABLED
-      - VIEW_DISTANCE
-      - PVP
-      - LEVEL
-      - VERSION
-      - MODE
-      - ALLOW_FLIGHT
-      - USE_NATIVE_TRANSPORT
-      - SIMULATION_DISTANCE
-      - STOP_SERVER_ANNOUNCE_DELAY
-      - GUI
-      - SPAWN_PROTECTION
-      - ENABLE_RCON
-      - RCON_PORT
-      - RCON_PASSWORD
+      SERVER_NAME: ${SERVER_NAME}
+      # TYPE: ${TYPE}
+      ENABLE_ROLLING_LOGS: ${ENABLE_ROLLING_LOGS}
+      JVM_OPTS: ${JVM_OPTS}
+      EULA: ${EULA}
+      MOTD: ${MOTD}
+      SEED: ${SEED}
+      DIFFICULTY: ${DIFFICULTY}
+      MAX_PLAYERS: ${MAX_PLAYERS}
+      MAX_WORLD_SIZE: ${MAX_WORLD_SIZE}
+      ENABLE_COMMAND_BLOCK: ${ENABLE_COMMAND_BLOCK}
+      SNOOPER_ENABLED: ${SNOOPER_ENABLED}
+      VIEW_DISTANCE: ${VIEW_DISTANCE}
+      PVP: ${PVP}
+      LEVEL: ${LEVEL}
+      VERSION: ${VERSION}
+      MODE: ${MODE}
+      ALLOW_FLIGHT: ${ALLOW_FLIGHT}
+      USE_NATIVE_TRANSPORT: ${USE_NATIVE_TRANSPORT}
+      SIMULATION_DISTANCE: ${SIMULATION_DISTANCE}
+      STOP_SERVER_ANNOUNCE_DELAY: ${STOP_SERVER_ANNOUNCE_DELAY}
+      GUI: ${GUI}
+      SPAWN_PROTECTION: ${SPAWN_PROTECTION}
+      ENABLE_RCON: ${ENABLE_RCON}
+      RCON_PORT: ${RCON_PORT}
+      RCON_PASSWORD: ${RCON_PASSWORD}
     ports:
-      - "25565:25565/tcp"
-      - "25565:25565/udp"
+      - "${MC_SERVER_PORT}:25565/tcp"
+      - "${MC_SERVER_PORT}:25565/udp"
     volumes:
       - ${MINECRAFT_DATA_PATH}:/data
       - /etc/timezone:/etc/timezone:ro
     restart: always
+    healthcheck:
+      test: mc-health
+      start_period: 1m
+      interval: 5s
+      retries: 10
     networks:
       - main-application-network2
   
   backup:
     image: itzg/mc-backup
-    depends_on:
-      - vanilla
     environment:
-      - BACKUP_INTERVAL
-      - RCON_HOST
-      - PRUNE_BACKUPS_DAYS
-      - RCON_PORT
-      - RCON_PASSWORD
+      BACKUP_INTERVAL: ${BACKUP_INTERVAL}
+      RCON_HOST: ${RCON_HOST}
+      RCON_PORT: ${RCON_PORT}
+      PRUNE_BACKUPS_DAYS: ${PRUNE_BACKUPS_DAYS}
     volumes:
       - ${MINECRAFT_DATA_PATH}:/data:ro
       - ${MINECRAFT_BACKUP_DATA_PATH}:/backups
       - /etc/timezone:/etc/timezone:ro
-    networks:
-      - main-application-network2
-
-  discord-srv-go:
-    build:
-      context: ./discord-srv-go
-      dockerfile: ./build/Dockerfile.prod
-    container_name: discord-srv-go
     depends_on:
       - vanilla
-    restart: always
-    environment:
-      DISCORD_WEBHOOK_URL: ${DISCORD_WEBHOOK_URL}
-      LOG_FILE: ${LOG_FILE}
-      LOG_LEVEL: ${LOG_LEVEL}
-      HEALTH_INTERVAL: ${HEALTH_INTERVAL}
-    volumes:
-      - ${MINECRAFT_DATA_PATH}:/data
     networks:
       - main-application-network2
 
