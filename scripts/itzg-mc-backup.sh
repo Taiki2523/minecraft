@@ -2,6 +2,7 @@
 
 docker run --rm \
   --name mc-backup \
+  --network main-application-network2 \
   -v /usr/share/minecraft_mnt/minecraft-data:/data:ro \
   -v /usr/share/minecraft_mnt/mc_backups:/backups \
   -e WORLD_SAVE_NAME=world_ver_1 \
