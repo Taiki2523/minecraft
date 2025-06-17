@@ -11,4 +11,5 @@ docker run --rm \
   -e RCON_PORT=25575 \
   -e RCON_PASSWORD=supersecurepassword \
   -e PRUNE_BACKUPS_DAYS=7 \
+  -e BACKUP_INTERVAL=0 \
   itzg/mc-backup >> /var/log/mc-backup/backup.log 2>&1
