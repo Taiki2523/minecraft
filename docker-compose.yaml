@@ -49,21 +49,21 @@ services:
     networks:
       - main-application-network2
   
-  backup:
-    image: itzg/mc-backup
-    environment:
-      BACKUP_INTERVAL: ${BACKUP_INTERVAL}
-      RCON_HOST: ${RCON_HOST}
-      RCON_PORT: ${RCON_PORT}
-      PRUNE_BACKUPS_DAYS: ${PRUNE_BACKUPS_DAYS}
-    volumes:
-      - ${MINECRAFT_DATA_PATH}:/data:ro
-      - ${MINECRAFT_BACKUP_DATA_PATH}:/backups
-      - /etc/timezone:/etc/timezone:ro
-    depends_on:
-      - vanilla
-    networks:
-      - main-application-network2
+#  backup:
+#    image: itzg/mc-backup
+#    environment:
+#      BACKUP_INTERVAL: ${BACKUP_INTERVAL}
+#      RCON_HOST: ${RCON_HOST}
+#      RCON_PORT: ${RCON_PORT}
+#      PRUNE_BACKUPS_DAYS: ${PRUNE_BACKUPS_DAYS}
+#    volumes:
+#      - ${MINECRAFT_DATA_PATH}:/data:ro
+#      - ${MINECRAFT_BACKUP_DATA_PATH}:/backups
+#      - /etc/timezone:/etc/timezone:ro
+#    depends_on:
+#      - vanilla
+#    networks:
+#      - main-application-network2
 
 networks:
   main-application-network2:
