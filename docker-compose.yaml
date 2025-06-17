@@ -11,6 +11,8 @@ services:
       JVM_OPTS: ${JVM_OPTS}
       EULA: ${EULA}
       MOTD: ${MOTD}
+      ENABLE_WHITELIST: ${ENABLE_WHITELIST}
+      WHITELIST: ${WHITELIST}
       SEED: ${SEED}
       DIFFICULTY: ${DIFFICULTY}
       MAX_PLAYERS: ${MAX_PLAYERS}
